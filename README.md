@@ -32,8 +32,8 @@ It briefly changes the band's haptic intensity setting, which makes the motor pu
 
 ## Requirements
 
-- iPhone on iOS 27
-- A Fitbit Air paired with that iPhone (Google Health keeps working alongside AirBuzz)
+- iPhone on iOS 27, or an Android 8.0+ phone (see [Android](#android))
+- A Fitbit Air paired with that phone (Google Health keeps working alongside AirBuzz)
 
 ## Set up notifications
 
@@ -41,7 +41,26 @@ In the app, tap **Buzz on notifications**, pick an app, and tap **Copy prompt an
 
 Or by hand: in Shortcuts go to **Automation → New → Notification**, choose the app, set it to run immediately, and add the **Buzz My Air** action.
 
-## Build from source
+## Android
+
+The Android app lives in `Android/` (Kotlin, Jetpack Compose) and shares the same C core through JNI. The Bluetooth transport is a port of the iOS one onto Android's GATT API.
+
+Android has no Shortcuts, so a notification listener replaces the automation. In the app, tap **Buzz on notifications**, grant notification access, and pick the apps that should buzz. AirBuzz only sees which app posted, never the contents. It skips silent channels, Do Not Disturb, ongoing and group-summary notifications, and merges bursts into one pulse.
+
+- Allow the Bluetooth permission when asked.
+- The band must already be paired with the phone through Google Health. AirBuzz picks the bonded device named Fitbit, or falls back to scanning for the tracker service.
+- Set AirBuzz to **Unrestricted** battery use so Android keeps the listener alive with the screen off.
+
+Build it with Android Studio (open `Android/`), or from a shell with the SDK, NDK and CMake 3.22 installed:
+
+```sh
+cd Android && ./gradlew assembleDebug   # app/build/outputs/apk/debug/app-debug.apk
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+`bash scripts/check-android.sh` builds the core on Linux, runs the loopback tests under AddressSanitizer and UBSan, and builds the APK when `ANDROID_HOME` is set.
+
+## Build from source (iOS)
 
 Needs macOS, Xcode with the iOS 27 SDK, CMake, Ninja and XcodeGen. Everything else is vendored.
 
@@ -54,9 +73,10 @@ That builds the C core for macOS and iOS, runs the fake-band loopback tests unde
 | Path | What's there |
 | --- | --- |
 | `App/` | SwiftUI app, CoreBluetooth transport, the App Intent |
+| `Android/` | Compose app, Android BLE transport, JNI bridge, notification listener |
 | `Core/` | C11 session wrapper over the Golden Gate stack, plus a fake band for tests |
 | `Vendor/golden-gate/` | Pinned Golden Gate core with mbedTLS 2.28 (Apache 2.0) |
-| `scripts/` | `check.sh` (the full gate) and `build-core.sh` |
+| `scripts/` | `check.sh` (the iOS gate), `check-android.sh` and `build-core.sh` |
 
 ## Disclaimer
 

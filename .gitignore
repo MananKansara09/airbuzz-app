@@ -3,3 +3,10 @@ DerivedData/
 *.xcodeproj/
 xcuserdata/
 .DS_Store
+.gradle/
+.cxx/
+local.properties
+*.iml
+.idea/
+Android/app/build/
+Android/build/

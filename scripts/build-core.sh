@@ -3,15 +3,19 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 platform="${1:-}"
 case "$platform" in
-    macos|ios) ;;
-    *) echo "Usage: $0 <macos|ios>" >&2; exit 2 ;;
+    macos|ios|linux) ;;
+    *) echo "Usage: $0 <macos|ios|linux>" >&2; exit 2 ;;
 esac
 output="$root/build/core-$platform"
 mkdir -p "$root/build/tmp"
 export TMPDIR="$root/build/tmp/"
-args=(
-    -S "$root" -B "$output" -G Ninja
-    -C "$root/Vendor/golden-gate/xp/config/profiles/macOS_cmdline.cmake"
+args=(-S "$root" -B "$output" -G Ninja)
+# Apple builds load the vendor profile first so the -D flags below override it.
+# Linux builds take their ports from Core/gg_posix_ports.cmake instead.
+if [[ "$platform" != linux ]]; then
+    args+=(-C "$root/Vendor/golden-gate/xp/config/profiles/macOS_cmdline.cmake")
+fi
+args+=(
     -DGG_CONFIG_MBEDTLS_VERSION=2
     -DGG_ENABLE_UNIT_TESTS=OFF
     -DGG_ENABLE_APPS=OFF

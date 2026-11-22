@@ -17,14 +17,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#ifdef __APPLE__
 /* The pinned Apple port omits freeing the opaque wrapper. CMake renames
- * its destructor so this adapter can complete ownership cleanup. */
+ * its destructor so this adapter can complete ownership cleanup. The POSIX
+ * port used on Linux and Android already frees it. */
 void AB_GG_Semaphore_DestroyStorage(GG_Semaphore* semaphore);
 void GG_Semaphore_Destroy(GG_Semaphore* semaphore) {
     if (!semaphore) return;
     AB_GG_Semaphore_DestroyStorage(semaphore);
     GG_FreeMemory(semaphore);
 }
+#endif
 #define HANDSHAKE_RETRY_MS 6000
 #define MAX_HANDSHAKE_ATTEMPTS 2
 #define LOST_HANDSHAKE_RACE (-1)
