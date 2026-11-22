@@ -34,11 +34,24 @@ android {
         }
     }
 
+    // CI passes a stable key through the environment so updates install over older builds.
+    // Without one, the debug key signs the build (fine for a single sideload).
+    val keystore = System.getenv("AB_KEYSTORE_FILE").orEmpty()
+    signingConfigs {
+        if (keystore.isNotEmpty()) {
+            create("ci") {
+                storeFile = file(keystore)
+                storePassword = System.getenv("AB_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("AB_KEY_ALIAS")
+                keyPassword = System.getenv("AB_KEYSTORE_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
-            // Sideloaded builds are signed with the debug key until a release key exists.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName(if (keystore.isNotEmpty()) "ci" else "debug")
         }
     }
 

@@ -1,0 +1,55 @@
+name: Android release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release tag to create, for example v1.0.1"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-24.04
+    env:
+      KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Accept Android SDK licenses
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+
+      - name: Core loopback test
+        run: bash scripts/build-core.sh linux && build/core-linux/loopback_test
+
+      - name: Restore signing key
+        if: ${{ env.KEYSTORE_B64 != '' }}
+        run: echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/airbuzz.jks"
+
+      - name: Build APK
+        working-directory: Android
+        env:
+          AB_KEYSTORE_FILE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' && format('{0}/airbuzz.jks', runner.temp) || '' }}
+          AB_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          AB_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: ./gradlew --no-daemon assembleRelease
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.inputs.version || github.ref_name }}
+        run: |
+          cp Android/app/build/outputs/apk/release/app-release.apk "AirBuzz-$TAG.apk"
+          gh release create "$TAG" "AirBuzz-$TAG.apk" --target "$GITHUB_SHA" \
+            --title "AirBuzz $TAG for Android" \
+            --notes "Download the APK on your phone and open it to install. Android will ask you to allow installs from your browser. Then grant Bluetooth and notification access in the app." \
+            || gh release upload "$TAG" "AirBuzz-$TAG.apk" --clobber

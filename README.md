@@ -51,7 +51,9 @@ Android has no Shortcuts, so a notification listener replaces the automation. In
 - The band must already be paired with the phone through Google Health. AirBuzz picks the bonded device named Fitbit, or falls back to scanning for the tracker service.
 - Set AirBuzz to **Unrestricted** battery use so Android keeps the listener alive with the screen off.
 
-Build it with Android Studio (open `Android/`), or from a shell with the SDK, NDK and CMake 3.22 installed:
+Install without building: open the repo's **Releases** page on your phone, download `AirBuzz-<version>.apk`, open it, and allow installs from your browser when Android asks. Pushing a tag like `v1.0.0` builds and publishes a release (`.github/workflows/android-release.yml`). Optional secrets `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD` and `ANDROID_KEY_ALIAS` sign every build with the same key so updates install over older ones; without them each build is debug-signed and an update needs an uninstall first.
+
+Build it yourself with Android Studio (open `Android/`), or from a shell with the SDK, NDK and CMake 3.22 installed:
 
 ```sh
 cd Android && ./gradlew assembleDebug   # app/build/outputs/apk/debug/app-debug.apk
