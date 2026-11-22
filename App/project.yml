@@ -1,0 +1,40 @@
+name: AirBuzz
+options:
+  deploymentTarget:
+    iOS: "27.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    DEVELOPMENT_TEAM: 86S9GU7H46
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    CLANG_ENABLE_MODULES: YES
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
+targets:
+  AirBuzz:
+    type: application
+    platform: iOS
+    sources:
+      - Sources
+      - Resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tavi.airbuzz
+        INFOPLIST_FILE: Resources/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        SWIFT_OBJC_BRIDGING_HEADER: AirBuzz-Bridging-Header.h
+        HEADER_SEARCH_PATHS: "$(SRCROOT)/../Core"
+        LIBRARY_SEARCH_PATHS: "$(SRCROOT)/../build/core-ios"
+        TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    dependencies:
+      - framework: ../build/core-ios/libairbuzz.a
+        embed: false
+      - sdk: CoreBluetooth.framework
+      - sdk: SwiftUI.framework
+      - sdk: AppIntents.framework
+schemes:
+  AirBuzz:
+    build:
+      targets:
+        AirBuzz: all
