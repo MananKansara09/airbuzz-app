@@ -1,29 +1,63 @@
-# AirBuzz
+<p align="center">
+  <img src="docs/images/icon.png" width="112" alt="AirBuzz icon">
+</p>
 
-AirBuzz makes a Fitbit Air pulse by temporarily changing its haptic intensity over Bluetooth, Golden Gate Gattlink, DTLS and CoAP. A single tap restores the original setting in the same write. Double holds the alternate setting for 800 ms. Every operation attempts a refusing DTLS handoff before reporting its result so Google Health can reclaim the tracker channel.
+<h1 align="center">AirBuzz</h1>
 
-## Build
+<p align="center">
+  Your Fitbit Air buzzes when your iPhone does.<br>
+  <a href="https://airbuzz.tavi.ceo">airbuzz.tavi.ceo</a> · free beta on TestFlight
+</p>
 
-Requires macOS, Xcode with an iOS 27 SDK, CMake, Ninja and XcodeGen. The Golden Gate core and mbedTLS are vendored; no package download is required.
+<p align="center">
+  <img src="docs/images/app.jpg" width="240" alt="AirBuzz main screen">
+  &nbsp;&nbsp;
+  <img src="docs/images/setup.jpg" width="240" alt="Notification setup guide">
+</p>
+
+The Fitbit Air has no screen and never buzzes for your messages. AirBuzz makes it pulse for any iPhone notification you pick: Messages, WhatsApp, Slack, even WhatsApp and Telegram calls.
+
+## How it works
+
+There is no API to vibrate the band, so AirBuzz speaks its protocol directly:
+
+```
+Bluetooth LE  →  Gattlink  →  DTLS 1.2 (PSK)  →  CoAP /settings
+```
+
+It briefly changes the band's haptic intensity setting, which makes the motor pulse, then restores it. After each buzz it hands the link back so the Google Health app keeps syncing. An iOS 27 Shortcuts Notification automation runs the **Buzz My Air** App Intent, so AirBuzz never reads your notifications.
+
+- **Single** taps once. **Double** holds the alternate setting for 800 ms.
+- Requests that arrive together run in order. Each one is capped at 25 seconds.
+
+## Requirements
+
+- iPhone on iOS 27
+- A Fitbit Air paired with that iPhone (Google Health keeps working alongside AirBuzz)
+
+## Set up notifications
+
+In the app, tap **Buzz on notifications**, pick an app, and tap **Copy prompt and open Shortcuts**. Paste the prompt into *Describe a shortcut*. Do this once per app.
+
+Or by hand: in Shortcuts go to **Automation → New → Notification**, choose the app, set it to run immediately, and add the **Buzz My Air** action.
+
+## Build from source
+
+Needs macOS, Xcode with the iOS 27 SDK, CMake, Ninja and XcodeGen. Everything else is vendored.
 
 ```sh
 bash scripts/check.sh
 ```
 
-The gate runs the macOS fake-band tests under AddressSanitizer and UndefinedBehaviorSanitizer, builds the iOS static archive, generates the Xcode project and compiles the app without signing. Individual core builds use `bash scripts/build-core.sh macos` or `bash scripts/build-core.sh ios`. Build artifacts live under `build/`.
+That builds the C core for macOS and iOS, runs the fake-band loopback tests under AddressSanitizer and UBSan, generates the Xcode project and compiles the app. Then open `App/AirBuzz.xcodeproj`, set your signing team and run it on your iPhone.
 
-## Install and use
-
-After building, open `App/AirBuzz.xcodeproj` in Xcode, select your iPhone and configure automatic signing for your account if necessary. Build and run to install. Allow Bluetooth access, keep the Fitbit Air nearby, then use **Test buzz** or **Read strength**. This repository's check script does not sign or install the app.
-
-The core permits one operation per session and has a 45-second operation limit including handoff. AirBuzz caps each active app request at 25 seconds; a stalled operation is cancelled and disconnected at that limit. Requests arriving together run in order. Physical-band behavior and notification delivery require testing on an iPhone with the band.
-
-## Shortcuts automations
-
-In Shortcuts, choose **Automation**, **New**, then **Notification**. Select the app, such as Messages, WhatsApp or Slack. Set it to run immediately without asking if offered, then add **Buzz My Air**. Leave Mode empty for a single tap or select Double. Turning on **Notify When Run** is not needed.
-
-WhatsApp and Telegram calls use the same Notification trigger. AirBuzz does not listen for notifications or detect calls itself; Shortcuts invokes its App Intent in the app process. The app also includes this setup guide.
+| Path | What's there |
+| --- | --- |
+| `App/` | SwiftUI app, CoreBluetooth transport, the App Intent |
+| `Core/` | C11 session wrapper over the Golden Gate stack, plus a fake band for tests |
+| `Vendor/golden-gate/` | Pinned Golden Gate core with mbedTLS 2.28 (Apache 2.0) |
+| `scripts/` | `check.sh` (the full gate) and `build-core.sh` |
 
 ## Disclaimer
 
-AirBuzz is an independent project, not affiliated with or endorsed by Google or Fitbit. Golden Gate under `Vendor/golden-gate` is Apache 2.0; see its LICENSE and NOTICE.
+AirBuzz is an independent project. It is not affiliated with or endorsed by Google or Fitbit. Golden Gate is Apache 2.0; see `Vendor/golden-gate/LICENSE` and `NOTICE`.
