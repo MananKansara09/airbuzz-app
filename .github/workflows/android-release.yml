@@ -3,6 +3,8 @@ name: Android release
 on:
   push:
     tags: ["v*"]
+    branches: [main, ccr-e3cd0e30-gk7px3]
+    paths: ["Android/**", "Core/**", "CMakeLists.txt", ".github/workflows/android-release.yml"]
   workflow_dispatch:
     inputs:
       version:
@@ -46,7 +48,7 @@ jobs:
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event.inputs.version || github.ref_name }}
+          TAG: ${{ github.event.inputs.version || (github.ref_type == 'tag' && github.ref_name) || format('v1.0.{0}', github.run_number) }}
         run: |
           cp Android/app/build/outputs/apk/release/app-release.apk "AirBuzz-$TAG.apk"
           gh release create "$TAG" "AirBuzz-$TAG.apk" --target "$GITHUB_SHA" \
