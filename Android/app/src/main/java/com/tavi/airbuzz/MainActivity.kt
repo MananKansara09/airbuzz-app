@@ -18,7 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 
-private enum class Screen { MAIN, SETUP, LOG }
+private enum class Screen { MAIN, SETUP, LOG, HISTORY }
 
 /** Bumped on every resume so screens re-check permissions the user changed in Settings. */
 object AppEvents {
@@ -51,9 +51,11 @@ private fun Root() {
         Screen.MAIN -> MainScreen(
             onSetup = { screen = Screen.SETUP },
             onLog = { screen = Screen.LOG },
+            onHistory = { screen = Screen.HISTORY },
             onAllowBluetooth = { askPermissions.launch(Permissions.missing(context).toTypedArray()) },
         )
         Screen.SETUP -> NotificationsScreen(onBack = { screen = Screen.MAIN })
         Screen.LOG -> ActivityLogScreen(onBack = { screen = Screen.MAIN })
+        Screen.HISTORY -> HistoryScreen(onBack = { screen = Screen.MAIN })
     }
 }

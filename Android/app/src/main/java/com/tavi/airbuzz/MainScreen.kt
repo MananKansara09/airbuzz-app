@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.sp
 import java.util.Locale
 
 @Composable
-fun MainScreen(onSetup: () -> Unit, onLog: () -> Unit, onAllowBluetooth: () -> Unit) {
+fun MainScreen(onSetup: () -> Unit, onLog: () -> Unit, onHistory: () -> Unit, onAllowBluetooth: () -> Unit) {
     val context = LocalContext.current
     val haptics = LocalHapticFeedback.current
     var running by remember { mutableStateOf(false) }
@@ -66,6 +66,7 @@ fun MainScreen(onSetup: () -> Unit, onLog: () -> Unit, onAllowBluetooth: () -> U
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                     DropdownMenuItem(text = { Text("Read strength") }, enabled = !running,
                         onClick = { menu = false; run(read = true) })
+                    DropdownMenuItem(text = { Text("Notification history") }, onClick = { menu = false; onHistory() })
                     DropdownMenuItem(text = { Text("Activity") }, onClick = { menu = false; onLog() })
                 }
             }
